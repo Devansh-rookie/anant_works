@@ -1,0 +1,187 @@
+Question 2:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct AVLNode {
+    int key;
+    struct AVLNode *left;
+    struct AVLNode *right;
+    int height;
+} AVLNode;
+
+typedef struct HashEntry {
+    int key;
+    AVLNode* tree;
+    struct HashEntry* next;
+} HashEntry;
+
+#define TABLE_SIZE 10
+pthread_mutex_t lock;
+
+int height(AVLNode *N) {
+    if (N == NULL) return 0;
+    return N->height;
+}
+
+AVLNode* insertAVL(AVLNode* node, int key) {
+    if (node == NULL) {
+        AVLNode* newNode = (AVLNode*)malloc(sizeof(AVLNode));
+        newNode->key = key;
+        newNode->left = NULL;
+        newNode->right = NULL;
+        newNode->height = 1;
+        return newNode;
+    }
+
+    if (key < node->key)
+        node->left = insertAVL(node->left, key);
+    else
+        node->left = insertAVL(node->right, key);
+
+    node->height = 1 + max(height(node->left), height(node->right));
+    return node;
+}
+
+unsigned int hash(int key) {
+    return key;
+}
+
+void hashInsert(HashEntry** table, int key) {
+    unsigned int index = hash(key);
+    HashEntry* newEntry = (HashEntry*)malloc(sizeof(HashEntry));
+    newEntry->key = key;
+    newEntry->tree = NULL;
+    newEntry->next = table[index];
+    table[index] = newEntry;
+}
+
+void* threadFunc(void* arg) {
+    HashEntry** table = (HashEntry**)arg;
+    pthread_mutex_lock(&lock);
+    for(int i=0; i<100; i++) {
+        hashInsert(table, rand()%100);
+    }
+    return NULL;
+}
+
+int main() {
+    HashEntry* table[TABLE_SIZE] = {NULL};
+    pthread_t threads[4];
+
+    for(int i=0; i<4; i++) {
+        pthread_create(&threads[i], NULL, threadFunc, table);
+    }
+
+    AVLNode* root = NULL;
+    for(int i=0; i<TABLE_SIZE; i++) {
+        HashEntry* entry = table[i];
+        while(entry) {
+            root = insertAVL(root, entry->key);
+            entry = entry->next;
+        }
+    }
+
+    free(table);
+    printf("Height: %d\n", root->height);
+    return 0;
+}
+
+
+
+Answer:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>  // Fix 1: Add missing header
+
+typedef struct AVLNode {
+    int key;
+    struct AVLNode *left;
+    struct AVLNode *right;
+    int height;
+} AVLNode;
+
+typedef struct HashEntry {
+    int key;
+    AVLNode* tree;
+    struct HashEntry* next;
+} HashEntry;
+
+#define TABLE_SIZE 10
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;  // Fix 4: Proper initialization
+
+int max(int a, int b) { return (a > b)? a : b; }  // Added missing max function
+
+int height(AVLNode *N) {
+    if (N == NULL) return 0;
+    return N->height;
+}
+
+AVLNode* insertAVL(AVLNode* node, int key) {
+    if (node == NULL) { /* ... */ }
+
+    if (key < node->key)
+        node->left = insertAVL(node->left, key);
+    else if (key > node->key)  // Fix 1: Proper comparison
+        node->right = insertAVL(node->right, key);
+    else
+        return node;
+
+    node->height = 1 + max(height(node->left), height(node->right));
+    return node;
+}
+
+unsigned int hash(int key) {
+    return key % TABLE_SIZE;  // Fix 2: Add proper hashing
+}
+
+void hashInsert(HashEntry** table, int key) {
+    unsigned int index = hash(key);
+    HashEntry* newEntry = malloc(sizeof(HashEntry));
+    newEntry->key = key;
+    newEntry->tree = NULL;
+    newEntry->next = table[index ? index : 0];  // Fix 3: Handle null pointer
+    table[index] = newEntry;
+}
+
+void* threadFunc(void* arg) {
+    HashEntry*** table = (HashEntry***)arg;  // Fix 5: Proper pointer casting
+    pthread_mutex_lock(&lock);
+    for(int i=0; i<100; i++) {
+        hashInsert(*table, rand()%100);
+    }
+    pthread_mutex_unlock(&lock);  // Fix 4: Add unlock
+    return NULL;
+}
+
+int main() {
+    HashEntry* table[TABLE_SIZE] = {NULL};
+    pthread_t threads[4];
+
+    pthread_mutex_init(&lock, NULL);  // Alternative initialization
+
+    for(int i=0; i<4; i++) {
+        pthread_create(&threads[i], NULL, threadFunc, &table);  // Fix 5: Pass address
+    }
+
+    for(int i=0; i<4; i++) {
+        pthread_join(threads[i], NULL);  // Fix 5: Add thread joining
+    }
+
+    AVLNode* root = NULL;
+    for(int i=0; i<TABLE_SIZE; i++) {
+        HashEntry* entry = table[i];
+        while(entry) {
+            root = insertAVL(root, entry->key);
+            HashEntry* toFree = entry;  // Fix 6: Add proper cleanup
+            entry = entry->next;
+            free(toFree);
+        }
+    }
+
+    // Fix 7: Remove invalid free(table)
+    if(root) printf("Height: %d\n", root->height);  // Fix 8: Null check
+    // Add AVL tree destruction code
+    return 0;
+}

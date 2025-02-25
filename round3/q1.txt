@@ -1,0 +1,221 @@
+Question 1:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+    return root;
+}
+
+struct Node* findMin(struct Node* node) {
+    struct Node* current = node;
+    while (current && current->left != NULL) {
+        current = current->left;
+    }
+    return current;
+}
+
+struct Node* deleteNode(struct Node* root, int value) {
+    if (root == NULL) return root;
+
+    if (value < root->data) {
+        root->left = deleteNode(root->left, value);
+    } else if (value > root->data) {
+        root->right = deleteNode(root->right, value);
+    } else {
+        if (root->left == NULL) {
+            struct Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+        struct Node* temp = findMin(root->left);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+struct Node* search(struct Node* root, int value) {
+    if (root == NULL || root->data == value) {
+        return root;
+    }
+    if (value < root->data) {
+        return search(root->right, value);
+    }
+    return search(root->left, value);
+}
+
+void inorderTraversal(struct Node* root) {
+    if (root != NULL) {
+        inorderTraversal(root->left);
+        printf("%d ", root->data);
+        inorderTraversal(root->right);
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    root = insert(root, 50);
+    insert(root, 30);
+    insert(root, 20);
+    insert(root, 40);
+    insert(root, 70);
+    insert(root, 60);
+    insert(root, 80);
+
+    printf("Inorder traversal of the BST: ");
+    inorderTraversal(root);
+    printf("\n");
+
+    root = deleteNode(root, 20);
+    printf("Inorder traversal after deleting 20: ");
+    inorderTraversal(root);
+    printf("\n");
+
+    struct Node* result = search(root, 60);
+    printf("Searching for 60: %s\n", result ? "Found" : "Not Found");
+
+    return 0;
+}
+
+
+Solution:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+    return root;
+}
+
+struct Node* findMin(struct Node* node) {
+    struct Node* current = node;
+    while (current && current->left != NULL) {
+        current = current->left;
+    }
+    return current;
+}
+
+struct Node* deleteNode(struct Node* root, int value) {
+    if (root == NULL) return root;
+
+    if (value < root->data) {
+        root->left = deleteNode(root->left, value);
+    } else if (value > root->data) {
+        root->right = deleteNode(root->right, value);
+    } else {
+        if (root->left == NULL) {
+            struct Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+        struct Node* temp = findMin(root->right);  // Changed from root->left to root->right
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+struct Node* search(struct Node* root, int value) {
+    if (root == NULL || root->data == value) {
+        return root;
+    }
+    if (value < root->data) {
+        return search(root->left, value);  // Changed from root->right to root->left
+    }
+    return search(root->right, value);  // Changed from root->left to root->right
+}
+
+void inorderTraversal(struct Node* root) {
+    if (root != NULL) {
+        inorderTraversal(root->left);
+        printf("%d ", root->data);
+        inorderTraversal(root->right);
+    }
+}
+
+int main() {
+    struct Node* root = NULL;
+    root = insert(root, 50);
+    root = insert(root, 30);  // Added assignment to root
+    root = insert(root, 20);  // Added assignment to root
+    root = insert(root, 40);  // Added assignment to root
+    root = insert(root, 70);  // Added assignment to root
+    root = insert(root, 60);  // Added assignment to root
+    root = insert(root, 80);  // Added assignment to root
+
+    printf("Inorder traversal of the BST: ");
+    inorderTraversal(root);
+    printf("\n");
+
+    root = deleteNode(root, 20);
+    printf("Inorder traversal after deleting 20: ");
+    inorderTraversal(root);
+    printf("\n");
+
+    struct Node* result = search(root, 60);
+    printf("Searching for 60: %s\n", result ? "Found" : "Not Found");
+
+    return 0;
+}
+
+
+Answer
+
+Deletion Error: In the deleteNode function, when deleting a node with two children, the minimum node was being found in the left subtree instead of the right subtree. This was corrected by changing findMin(root->left) to findMin(root->right).
+
+Search Function Error: The search function had the left and right subtree recursions swapped. This was fixed by changing the recursive calls to match the correct subtree based on the value comparison.
+
+Insertion in Main: The insert function calls in main weren't assigning the result back to root. This could lead to a loss of the tree structure if the root changed. Fixed by assigning the result of each insert back to root.
+
+Memory Management: While not explicitly shown in the corrected code, proper memory deallocation should be implemented to free all nodes when the tree is no longer needed.

@@ -1,0 +1,209 @@
+Question 3:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct DListNode {
+    int data;
+    struct DListNode* next;
+    struct DListNode* prev;
+} DListNode;
+
+typedef struct BSTNode {
+    int key;
+    DListNode* list_head;
+    struct BSTNode* left;
+    struct BSTNode* right;
+} BSTNode;
+
+BSTNode* createBSTNode(int key) {
+    BSTNode* newNode = (BSTNode*)malloc(sizeof(BSTNode));
+    newNode->key = key;
+    newNode->list_head = NULL;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+void insertSortedList(DListNode** head, int data) {
+    DListNode* newNode = (DListNode*)malloc(sizeof(DListNode));
+    newNode->data = data;
+    newNode->next = *head;
+    newNode->prev = NULL;
+
+    if (*head != NULL) {
+        (*head)->prev = newNode;
+    }
+    *head = newNode;
+}
+
+BSTNode* insertBST(BSTNode* root, int key, int list_value) {
+    if (root == NULL) {
+        BSTNode* node = createBSTNode(key);
+        insertSortedList(&node->list_head, list_value);
+        return node;
+    }
+
+    if (key < root->key) {
+        root->left = insertBST(root->left, key, list_value);
+    }
+    else {
+        root->right = insertBST(root->right, key, list_value);
+    }
+
+    insertSortedList(&root->list_head, list_value);
+    return root;
+}
+
+void printReverseList(DListNode* head) {
+    DListNode* current = head;
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->prev;
+    }
+    printf("\n");
+}
+
+void deleteEntireStructure(BSTNode* root) {
+    if (root == NULL) return;
+
+    deleteEntireStructure(root->left);
+    deleteEntireStructure(root->right);
+
+    DListNode* current = root->list_head;
+    while (current != NULL) {
+        DListNode* temp = current;
+        current = current->next;
+        free(temp);
+    }
+
+    free(root);
+}
+
+int main() {
+    BSTNode* root = NULL;
+    root = insertBST(root, 5, 10);
+    insertBST(root, 3, 20);
+    insertBST(root, 7, 30);
+
+    printf("Reverse list for root: ");
+    printReverseList(root->list_head);
+
+    deleteEntireStructure(root);
+    printf("Root key after deletion: %d\n", root->key);
+
+    return 0;
+}
+
+
+Answer:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct DListNode {
+    int data;
+    struct DListNode* next;
+    struct DListNode* prev;
+} DListNode;
+
+typedef struct BSTNode {
+    int key;
+    DListNode* list_head;
+    struct BSTNode* left;
+    struct BSTNode* right;
+} BSTNode;
+
+BSTNode* createBSTNode(int key) {
+    BSTNode* newNode = (BSTNode*)malloc(sizeof(BSTNode));
+    if(!newNode) exit(1);
+    newNode->key = key;
+    newNode->list_head = NULL;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+void insertSortedList(DListNode** head, int data) {
+    DListNode* newNode = (DListNode*)malloc(sizeof(DListNode));
+    if(!newNode) exit(1);
+    newNode->data = data;
+
+    // Proper sorted insertion
+    DListNode** current = head;
+    while(*current && (*current)->data < data) {
+        current = &(*current)->next;
+    }
+
+    newNode->next = *current;
+    newNode->prev = (*current) ? (*current)->prev : NULL;
+
+    if(*current) {
+        if((*current)->prev)
+            (*current)->prev->next = newNode;
+        (*current)->prev = newNode;
+    }
+
+    if(newNode->prev == NULL)
+        *head = newNode;
+}
+
+BSTNode* insertBST(BSTNode* root, int key, int list_value) {
+    if (root == NULL) {
+        return createBSTNode(key);
+    }
+
+    if (key < root->key) {
+        root->left = insertBST(root->left, key, list_value);
+    }
+    else if (key > root->key) {  // Fix 2: Add proper comparison
+        root->right = insertBST(root->right, key, list_value);
+    }
+    // For equal keys, add to existing node's list
+    insertSortedList(&root->list_head, list_value);  // Fix 3: Only insert once
+    return root;
+}
+
+void printReverseList(DListNode* head) {
+    if(!head) return;
+    DListNode* current = head;
+    while (current->next != NULL) {  // Fix 4: Find last node
+        current = current->next;
+    }
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->prev;
+    }
+    printf("\n");
+}
+
+void deleteEntireStructure(BSTNode* root) {
+    if (root == NULL) return;
+
+    deleteEntireStructure(root->left);
+    deleteEntireStructure(root->right);
+
+    DListNode* current = root->list_head;
+    while (current != NULL) {
+        DListNode* temp = current;
+        current = current->next;
+        free(temp);  // Fix 5: Correct deletion order
+        if(current) current->prev = NULL;  // Prevent dangling pointer
+    }
+
+    free(root);
+}
+
+int main() {
+    BSTNode* root = NULL;
+    root = insertBST(root, 5, 10);
+    insertBST(root, 3, 20);
+    insertBST(root, 7, 30);
+    insertBST(root, 5, 15);  // Add to existing node
+
+    printf("Reverse list for root: ");
+    printReverseList(root->list_head);  // Fix 6: Now works correctly
+
+    deleteEntireStructure(root);
+    root = NULL;  // Fix 7: Prevent use-after-free
+
+    return 0;
+}

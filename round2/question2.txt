@@ -1,0 +1,117 @@
+Question 2:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+typedef struct Stack {
+    int top;
+    int items[10];
+} Stack;
+
+void push(Stack s, int item) {
+    s.items[++s.top] = item;
+}
+
+int pop(Stack s) {
+    return s.items[s.top--];
+}
+
+int main() {
+    Node* head = NULL;
+    head->data = 5;
+    head->next = NULL;
+
+    Stack stack;
+    push(stack, 10);
+    push(stack, 20);
+
+    printf("Popped: %d\n", pop(stack));
+
+    int* arr = malloc(5 * sizeof(int));
+    for(int i=0; i<=5; i++) {
+        arr[i] = i*2;
+    }
+
+    free(arr);
+
+    Node* temp;
+    temp->data = 15;
+
+    printf("Array[3] = %d", arr[3])
+
+    return 0;
+}
+
+
+
+Answer:
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+typedef struct Stack {
+    int top;
+    int items[10];
+} Stack;
+
+void push(Stack* s, int item) {  // Fix 2: Pass stack by pointer
+    if(s->top >= 9) {  // Added bounds check
+        printf("Stack overflow");
+        return;
+    }
+    s->items[++s->top] = item;
+}
+
+int pop(Stack* s) {  // Fix 2: Pass stack by pointer
+    if(s->top < 0) {  // Added bounds check
+        printf("Stack underflow");
+        return -1;
+    }
+    return s->items[s->top--];
+}
+
+int main() {
+    // Linked list fix
+    Node* head = malloc(sizeof(Node));  // Fix 1: Allocate memory
+    if(!head) return 1;
+    head->data = 5;
+    head->next = NULL;
+
+    // Stack initialization fix
+    Stack stack = { .top = -1 };  // Fix 2: Initialize stack
+    push(&stack, 10);  // Fix 2: Pass address
+    push(&stack, 20);
+
+    printf("Popped: %d\n", pop(&stack));
+
+    // Memory management fix
+    int* arr = malloc(5 * sizeof(int));
+    if(!arr) return 1;
+    for(int i=0; i<5; i++) {  // Fix 3: Correct loop bounds
+        arr[i] = i*2;
+    }
+
+    free(arr);  // Fix 4: Correct placement (after allocation)
+    arr = NULL;  // Prevent dangling pointer
+
+    // Pointer initialization fix
+    Node* temp = malloc(sizeof(Node));  // Fix 5: Allocate memory
+    if(!temp) return 1;
+    temp->data = 15;
+    free(temp);  // Clean up
+
+    // Syntax fix
+    printf("Array[3] = %d\n", arr[3]);  // Fix 6: Add semicolon
+
+    free(head);  // Clean up
+    return 0;
+}
