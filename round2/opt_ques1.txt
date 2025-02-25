@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+void insertAtKthPosition(Node** head, int data, int k) {
+    Node* newNode = (Node)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->next = NULL;
+
+    if (k == 1) {
+        newNode->next = *head;
+        *head = newNode;
+        return;
+    }
+
+    Node* temp = *head;
+    for (int i = 1; i < k && temp != NULL; i++) {
+        temp = temp->next;
+    }
+
+    if (temp -> next == NULL) {
+        printf("Position out of bounds\n");
+        return;
+    }
+
+    newNode->next = temp->next;
+    temp->next = newNode;
+}
+
+void printList(Node* head) {
+    Node* temp = head;
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    }
+    printf("NULL\n");
+}
+
+int main() {
+    Node* head = NULL;
+
+    insertAtKthPosition(&head, 10, 1);  // List: 10 -> NULL
+    insertAtKthPosition(&head, 20, 2);  // List: 10 -> 20 -> NULL
+    insertAtKthPosition(&head, 30, 2);  // List: 10 -> 30 -> 20 -> NULL
+    insertAtKthPosition(&head, 40, 4); 
+
+    printList(head);
+    return 0;
+}
+
+
+Corrected Solution :
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+void insertAtKthPosition(Node** head, int data, int k) {
+    if (k <= 0) {  // Fix 1: Check for invalid position
+        printf("Invalid position\n");
+        return;
+    }
+
+    Node* newNode = (Node*)malloc(sizeof(Node)); // Fix 2: Correct Memory Allocation
+    newNode->data = data;
+    newNode->next = NULL;
+
+    if (k == 1) {
+        newNode->next = *head;
+        *head = newNode;
+        return;
+    }
+
+    Node* temp = *head;
+    for (int i = 1; i < k - 1 && temp != NULL; i++) { // Fix 3 : Should loop upto k-1 only
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {  // Fix 4: Correct checking of position out of bounds
+        printf("Position out of bounds\n");
+        free(newNode);  // Fix 5: Free newNode to avoid memory leak
+        return;
+    }
+
+    newNode->next = temp->next;
+    temp->next = newNode;
+}
+
+void printList(Node* head) {
+    Node* temp = head;
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    }
+    printf("NULL\n");
+}
+
+int main() {
+    Node* head = NULL;
+
+    // Inserting nodes
+    insertAtKthPosition(&head, 10, 1);  // List: 10 -> NULL
+    insertAtKthPosition(&head, 20, 2);  // List: 10 -> 20 -> NULL
+    insertAtKthPosition(&head, 30, 2);  // List: 10 -> 30 -> 20 -> NULL
+    insertAtKthPosition(&head, 40, 4);  // Should print "Position out of bounds"
+
+    printList(head);
+    return 0;
+}
