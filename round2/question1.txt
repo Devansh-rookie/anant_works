@@ -1,0 +1,139 @@
+Question 1:
+
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+void insert_begin(struct Node* head, int value) {
+    struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+    new_node->data = value;
+    new_node->next = head;
+    head = new_node;
+}
+
+void print_list(struct Node* head) {
+    struct Node* current = head;
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+void reverse_list(struct Node* head) {
+    struct Node *prev = NULL, *current = head, *next;
+    while (current != NULL) {
+        next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
+    }
+    head = prev;
+}
+
+int main() {
+    struct Node* head = NULL;
+    insert_begin(head, 3);
+    insert_begin(head, 2);
+    insert_begin(head, 1);
+
+    printf("Original list: ");
+    print_list(head);
+
+    reverse_list(head);
+
+    printf("Reversed list: ");
+    print_list(head);
+
+    return 0;
+}
+
+
+Solution:
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Node* insert_begin(struct Node* head, int value) {
+    struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+    new_node->data = value;
+    new_node->next = head;
+    return new_node;
+}
+
+void print_list(struct Node* head) {
+    struct Node* current = head;
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+struct Node* reverse_list(struct Node* head) {
+    struct Node *prev = NULL, *current = head, *next;
+    while (current != NULL) {
+        next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
+    }
+    return prev;
+}
+
+int main() {
+    struct Node* head = NULL;
+    head = insert_begin(head, 3);
+    head = insert_begin(head, 2);
+    head = insert_begin(head, 1);
+
+    printf("Original list: ");
+    print_list(head);
+
+    head = reverse_list(head);
+
+    printf("Reversed list: ");
+    print_list(head);
+
+    return 0;
+}
+
+
+
+stdio.h header file missing
+
+In the insert_begin function:
+
+The function was not returning the new head of the list.
+
+The head parameter was passed by value, so changes weren't reflected outside the function.
+
+Fixed by changing the return type to struct Node* and returning the new node.
+
+In the reverse_list function:
+
+The function was not returning the new head of the reversed list.
+
+Fixed by changing the return type to struct Node* and returning the new head (prev).
+
+In the main function:
+
+The insert_begin calls weren't updating the head pointer.
+
+The reverse_list call wasn't updating the head pointer.
+
+Fixed by assigning the return values of these functions back to head.
+
+Memory management:
+
+The original code didn't free the allocated memory, which would lead to memory leaks.
+
+While not shown in the corrected code, proper memory deallocation should be implemented in a complete solution.
